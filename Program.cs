@@ -15,6 +15,13 @@ namespace az_auth_demo
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddMicrosoftIdentityWebAppAuthentication(builder.Configuration)
+                .EnableTokenAcquisitionToCallDownstreamApi()
+                .AddMicrosoftGraph(options =>
+                {
+                    options.Scopes = new[] { "User.Read" };
+                });
+
             // Add services to the container.
             builder.Services.AddRazorPages();
 

@@ -1,6 +1,9 @@
 ﻿global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.AspNetCore.Mvc.RazorPages;
 
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Graph;
+using Microsoft.Identity.Web;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,18 +12,20 @@ using Microsoft.Extensions.Logging;
 
 namespace az_auth_demo.Pages
 {
+    [Authorize]
     public class IndexModel : PageModel
     {
-        private readonly ILogger<IndexModel> _logger;
+        private readonly GraphServiceClient _graphServiceClient;
+        public User? UserProfile { get; private set; }
 
-        public IndexModel(ILogger<IndexModel> logger)
+        public IndexModel(GraphServiceClient graphServiceClient)
         {
-            _logger = logger;
+            _graphServiceClient = graphServiceClient;
         }
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
-
+            UserProfile = await _graphServiceClient.Me.GetAsync();
         }
     }
 }
