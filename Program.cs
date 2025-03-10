@@ -6,6 +6,17 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.UI;
+using Microsoft.Graph;
+using Microsoft.Graph.Models;
+using Microsoft.Graph.Core;
+// Remove the general namespace import and use fully qualified name instead
+// using Microsoft.AspNetCore.Builder;
+using WebApplication = Microsoft.AspNetCore.Builder.WebApplication;
+using AspNetWebApp = Microsoft.AspNetCore.Builder.WebApplication;
+using GraphWebApp = Microsoft.Graph.Models.WebApplication;
 
 namespace az_auth_demo
 {
@@ -13,35 +24,33 @@ namespace az_auth_demo
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            // Use fully qualified name for WebApplication
+            var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
 
-            builder.Services.AddMicrosoftIdentityWebAppAuthentication(builder.Configuration)
-                .EnableTokenAcquisitionToCallDownstreamApi()
-                .AddMicrosoftGraph(options =>
-                {
-                    options.Scopes = new[] { "User.Read" };
-                });
+            // Add services to the container
+            builder.Services
+                .AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+                .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"))
+                .EnableTokenAcquisitionToCallDownstreamApi(initialScopes: new[] { "User.Read" })
+                .AddMicrosoftGraph()
+                .AddInMemoryTokenCaches();
 
-            // Add services to the container.
             builder.Services.AddRazorPages();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // Configure middleware
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts
                 app.UseHsts();
             }
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
-
             app.MapRazorPages();
 
             app.Run();
